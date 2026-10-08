@@ -1,27 +1,26 @@
 import { Link } from 'react-router'
 import { useUser } from '@clerk/react-router'
 import { ArrowRight } from 'lucide-react'
-import { listOrdersByEmail } from '../api/batches'
+import { listMyOrders } from '../api/batches'
 import { OrderStatusBadge } from '../components/badges'
 import { BatchCover } from '../components/BatchCover'
 import { ButtonLink } from '../components/ui/Button'
 import { Card, EmptyState, ErrorState, Skeleton } from '../components/ui/primitives'
 import { buyerHeadline } from '../domain/batchLogic'
 import { useQuery } from '../hooks/useQuery'
-import { userEmails } from '../lib/auth'
 import { formatDate, formatINR } from '../lib/utils'
 
 export function MyOrders() {
   const { user } = useUser()
-  const emails = userEmails(user)
-  const { data, loading, error } = useQuery(`my-orders:${emails.join(',')}`, () => listOrdersByEmail(emails))
+  const email = user.primaryEmailAddress?.emailAddress
+  const { data, loading, error } = useQuery(`my-orders:${user.id}`, listMyOrders)
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
       <p className="text-sm font-medium text-muted-fg">Hi {user.firstName ?? 'there'} 👋</p>
       <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">My pre-orders</h1>
       <p className="mt-1 text-sm text-muted-fg">
-        Orders placed with {emails.length ? emails.join(', ') : 'your verified email'}.
+        Orders placed with {email ?? 'your verified email'}.
       </p>
 
       <div className="mt-8 space-y-3">

@@ -2,6 +2,7 @@ import { useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { X } from 'lucide-react'
+import { studioThemeProps, useStudioHue } from '../../lib/studioTheme'
 import { cn } from '../../lib/utils'
 
 /**
@@ -11,6 +12,7 @@ export function Sheet({ open, onClose, title, description, children, footer, cla
   const titleId = useId()
   const panelRef = useRef(null)
   const onCloseRef = useRef(onClose)
+  const theme = studioThemeProps(useStudioHue())
 
   useEffect(() => {
     onCloseRef.current = onClose
@@ -36,7 +38,10 @@ export function Sheet({ open, onClose, title, description, children, footer, cla
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6">
+        <div
+          className={cn('fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6', theme.className)}
+          style={theme.style}
+        >
           <motion.div
             className="absolute inset-0 bg-stone-950/50 backdrop-blur-[2px]"
             initial={{ opacity: 0 }}

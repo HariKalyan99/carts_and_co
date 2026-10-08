@@ -2,11 +2,14 @@ import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router'
 import { motion } from 'motion/react'
 import { ArrowRight, BellRing, HandCoins, Hammer } from 'lucide-react'
-import { listBatches } from '../api/batches'
+import { listPublicBatches } from '../api/batches'
+import { listStudios } from '../api/creators'
 import { BatchCard } from '../components/BatchCard'
 import { ButtonLink } from '../components/ui/Button'
 import { Card, ErrorState, SectionHeading, Skeleton } from '../components/ui/primitives'
 import { useQuery } from '../hooks/useQuery'
+import { studioThemeProps } from '../lib/studioTheme'
+import { cn, pluralize } from '../lib/utils'
 
 const STEPS = [
   {
@@ -32,8 +35,33 @@ const DEMOS = [
   { token: 'demo-packed', emoji: '📦', label: 'Awaiting courier pickup' },
 ]
 
+function StudioCard({ studio }) {
+  const theme = studioThemeProps(studio.accentHue)
+  return (
+    <Link
+      to={`/s/${studio.slug}`}
+      style={theme.style}
+      className={cn(
+        'group flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-lg hover:shadow-stone-900/5',
+        theme.className,
+      )}
+    >
+      <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-accent text-2xl">{studio.emoji}</span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-display text-lg font-semibold">{studio.studioName}</p>
+        <p className="truncate text-sm text-muted-fg">
+          {studio.displayName} · {studio.city}
+        </p>
+        <p className="mt-0.5 text-xs font-semibold text-primary">{pluralize(studio.batchCount, 'batch', 'batches')}</p>
+      </div>
+      <ArrowRight className="size-4 shrink-0 text-muted-fg transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+    </Link>
+  )
+}
+
 export function Storefront() {
-  const { data: batches, loading, error } = useQuery('batches', listBatches)
+  const { data: batches, loading, error } = useQuery('public-batches', listPublicBatches)
+  const { data: studios } = useQuery('studios', listStudios)
   const { hash } = useLocation()
 
   useEffect(() => {
@@ -103,6 +131,17 @@ export function Storefront() {
             <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {inProgress.map((b) => (
                 <BatchCard key={b.id} batch={b} to={`/b/${b.id}`} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {studios?.length > 0 && (
+          <section id="makers" className="scroll-mt-24">
+            <SectionHeading title="Meet the makers" description="Independent studios selling in small, honest batches." />
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {studios.map((s) => (
+                <StudioCard key={s.id} studio={s} />
               ))}
             </div>
           </section>

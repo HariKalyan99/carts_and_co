@@ -43,6 +43,14 @@ export function timeAgo(iso) {
   return 'just now'
 }
 
+export const slugFrom = (text) =>
+  text
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-/, '')
+    .slice(0, 40)
+
 export function pluralize(n, one, many = `${one}s`) {
   return `${n} ${n === 1 ? one : many}`
 }

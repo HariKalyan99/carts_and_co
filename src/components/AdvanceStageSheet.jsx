@@ -16,7 +16,6 @@ export function AdvanceStageSheet({ batch, open, onClose }) {
   const [photoUrl, setPhotoUrl] = useState(null)
   const fileRef = useRef(null)
   const [submit, pending] = useMutation(advanceStage)
-
   if (!next) return null
 
   const starting = batch.stage === 'funding'
@@ -36,7 +35,7 @@ export function AdvanceStageSheet({ batch, open, onClose }) {
 
   const onConfirm = async () => {
     try {
-      const res = await submit(batch.id, { note, photoUrl })
+      const res = await submit(batch, { note, photoUrl })
       toast.success(`${res.stage.emoji} Moved to ${res.stage.label}`, {
         description: `${pluralize(res.notified, 'buyer')} notified by email.`,
       })

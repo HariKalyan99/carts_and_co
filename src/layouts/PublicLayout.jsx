@@ -3,6 +3,8 @@ import { UserButton, useUser } from '@clerk/react-router'
 import { LayoutDashboard, LogIn, PackageSearch, ShoppingBag } from 'lucide-react'
 import { Logo, ThemeToggle } from '../components/common'
 import { ButtonLink } from '../components/ui/Button'
+import { getMyCreator } from '../api/creators'
+import { useQuery } from '../hooks/useQuery'
 import { isCreator } from '../lib/auth'
 import { cn } from '../lib/utils'
 
@@ -14,6 +16,10 @@ const navLink = ({ isActive }) =>
 
 function AccountNav() {
   const { isLoaded, isSignedIn, user } = useUser()
+  const allowed = isSignedIn && isCreator(user)
+  const { data: studio } = useQuery(`creator:${allowed ? user.id : 'none'}`, () =>
+    allowed ? getMyCreator() : Promise.resolve(null),
+  )
 
   if (!isLoaded) return <span className="size-8 animate-pulse rounded-full bg-muted" aria-hidden />
 
@@ -31,10 +37,10 @@ function AccountNav() {
         <ShoppingBag className="size-4" />
         <span className="hidden md:inline">My orders</span>
       </NavLink>
-      {isCreator(user) && (
-        <ButtonLink to="/dashboard" variant="secondary" size="sm" className="ml-1">
+      {studio && (
+        <ButtonLink to="/dashboard" variant="secondary" size="sm" className="ml-1" title={studio.studioName}>
           <LayoutDashboard className="size-4" />
-          <span className="hidden sm:inline">Studio</span>
+          <span className="hidden sm:inline">My studio</span>
         </ButtonLink>
       )}
       <div className="ml-2 flex">
@@ -72,15 +78,18 @@ export function PublicLayout() {
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-muted-fg sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p>Handmade in small batches. Funded by people who care.</p>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
             <Link to="/#how-it-works" className="hover:text-fg">
               How it works
             </Link>
             <Link to="/track" className="hover:text-fg">
               Track an order
             </Link>
+            <Link to="/#makers" className="hover:text-fg">
+              Makers
+            </Link>
             <Link to="/dashboard" className="hover:text-fg">
-              For makers
+              Open a studio
             </Link>
           </div>
         </div>

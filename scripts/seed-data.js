@@ -65,6 +65,37 @@ function makeOrders({ batchId, code, quantities, start, status, tokenPrefix, pac
   })
 }
 
+export const SARAH_ID = 'seed_sarah'
+export const KABIR_ID = 'seed_kabir'
+export const SEED_CREATOR_IDS = [SARAH_ID, KABIR_ID]
+
+export function seedCreators(now = Date.now()) {
+  return [
+    {
+      id: SARAH_ID,
+      slug: 'clay-and-ember',
+      displayName: 'Sarah Thomas',
+      studioName: 'Clay & Ember Studio',
+      city: 'Bengaluru',
+      bio: 'Wheel-thrown stoneware made in small batches in a home studio. Every glaze is mixed by hand.',
+      accentHue: 18,
+      emoji: '☕',
+      createdAt: new Date(now - 90 * DAY).toISOString(),
+    },
+    {
+      id: KABIR_ID,
+      slug: 'neel-blue-pottery',
+      displayName: 'Kabir Rathore',
+      studioName: 'Neel Blue Pottery',
+      city: 'Jaipur',
+      bio: 'Third-generation Jaipur blue pottery — quartz clay, cobalt and hand-painted florals.',
+      accentHue: 215,
+      emoji: '🏺',
+      createdAt: new Date(now - 60 * DAY).toISOString(),
+    },
+  ]
+}
+
 export function createSeed() {
   const now = Date.now()
   const iso = (offsetDays) => new Date(now + offsetDays * DAY).toISOString()
@@ -77,8 +108,7 @@ export function createSeed() {
       tagline: 'Speckled stoneware in moss, rust and bark tones.',
       description:
         'Fifty wheel-thrown mugs inspired by October walks through the Nilgiri forests. Each one is dipped in a layered glaze that pools into deep rust at the rim and fades to moss green at the base. Holds 350 ml, dishwasher safe, and no two are the same.',
-      artist: 'Sarah Thomas',
-      studio: 'Clay & Ember Studio, Bengaluru',
+      creatorId: SARAH_ID,
       unitLabel: 'mugs',
       price: 1800,
       fundingGoal: 30,
@@ -96,8 +126,7 @@ export function createSeed() {
       tagline: 'Deep cobalt tumblers with a ripple-carved base.',
       description:
         'Hand-carved ripples run around the base of every tumbler, glazed in a cobalt blue that breaks to white on the ridges. Sized for cold brew or a long nimbu pani.',
-      artist: 'Sarah Thomas',
-      studio: 'Clay & Ember Studio, Bengaluru',
+      creatorId: SARAH_ID,
       unitLabel: 'tumblers',
       price: 2200,
       fundingGoal: 20,
@@ -123,8 +152,7 @@ export function createSeed() {
       tagline: 'Generous bowls with a saffron-to-blush gradient.',
       description:
         'Big, deep bowls for ramen, khichdi and everything in between. The glaze is sprayed by hand to fade from saffron at the rim to a soft blush inside.',
-      artist: 'Sarah Thomas',
-      studio: 'Clay & Ember Studio, Bengaluru',
+      creatorId: SARAH_ID,
       unitLabel: 'bowls',
       price: 2600,
       fundingGoal: 15,
@@ -144,6 +172,24 @@ export function createSeed() {
           note: 'Every bowl survived the kiln! Packing starts today, a few postal zones at a time.',
         },
       ],
+    },
+    {
+      id: 'indigo-garden',
+      code: 'IG',
+      creatorId: KABIR_ID,
+      title: 'Indigo Garden Dinner Plates',
+      tagline: 'Hand-painted cobalt florals on quartz clay.',
+      description:
+        'Twenty-four dinner plates in traditional Jaipur blue pottery. Each one is hand-painted with a different garden motif and fired at low temperature for that glassy finish.',
+      unitLabel: 'plates',
+      price: 2400,
+      fundingGoal: 20,
+      maxQuantity: 24,
+      fundingDeadline: iso(18),
+      createdAt: iso(-4),
+      coverHue: 220,
+      stage: 'funding',
+      stageHistory: [{ stage: 'funding', at: iso(-4), note: 'Pre-orders are open — only 24 will ever be made!' }],
     },
   ]
 
@@ -177,6 +223,14 @@ export function createSeed() {
       ],
       shippedTiers: 1,
     }),
+    ...makeOrders({
+      batchId: 'indigo-garden',
+      code: 'IG',
+      quantities: [2, 1, 1, 2, 1, 1, 2, 1],
+      start: now - 4 * DAY,
+      status: 'pledged',
+      tokenPrefix: 'demo-indigo',
+    }),
   ]
 
   const outbox = [
@@ -209,7 +263,7 @@ export function createSeed() {
     const o = orders.find((x) => x.id === orderId)
     return { role: 'buyer', name: o.buyerName, orderId: o.id, orderNumber: o.number }
   }
-  const creator = { role: 'creator', name: 'Sarah Thomas' }
+  const creator = { role: 'creator', creatorId: SARAH_ID, name: 'Sarah Thomas' }
   const comment = (id, batch, stage, author, body, hoursAgo, parentId = null) => ({
     id,
     batchId: batch.id,
@@ -232,5 +286,5 @@ export function createSeed() {
     comment('c-seed-8', autumn, 'funding', buyer('autumn-forest-o1'), 'Shared this with my book club — hope we hit 30! 🍂', 50),
   ]
 
-  return { batches, orders, outbox, comments }
+  return { creators: seedCreators(now), batches, orders, outbox, comments }
 }

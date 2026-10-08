@@ -1,15 +1,15 @@
 import { useState } from 'react'
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { CalendarClock, ChevronDown, Lock, MapPin, ShieldCheck, Users } from 'lucide-react'
 import { useUser } from '@clerk/react-router'
-import { getPublicBatch, listOrdersByEmail } from '../api/batches'
-import { userEmails } from '../lib/auth'
+import { getPublicBatch, listMyOrders } from '../api/batches'
 import { BatchCover } from '../components/BatchCover'
 import { CopyButton } from '../components/common'
 import { FundingProgress } from '../components/FundingProgress'
 import { PhaseBadge } from '../components/badges'
 import { PledgeSheet } from '../components/PledgeSheet'
 import { StageTimeline } from '../components/StageTimeline'
+import { StudioTheme } from '../components/StudioTheme'
 import { Button, ButtonLink } from '../components/ui/Button'
 import { Card, EmptyState, Skeleton } from '../components/ui/primitives'
 import { UpdatesFeed } from '../components/UpdatesFeed'
@@ -110,12 +110,13 @@ export function PublicBatch() {
 
   // Signed-in backers can join the conversation right here, matched by verified email.
   const { user } = useUser()
-  const emails = userEmails(user)
-  const { data: myOrders } = useQuery(`my-orders:${emails.join(',')}`, () =>
-    emails.length ? listOrdersByEmail(emails) : Promise.resolve([]),
+  const { data: myOrders } = useQuery(`my-orders:${user?.id ?? 'guest'}`, () =>
+    user ? listMyOrders() : Promise.resolve([]),
   )
   const myOrder = myOrders?.find((x) => x.order.batchId === batchId && x.order.status !== 'refunded')?.order
-  const viewer = myOrder ? { role: 'buyer', orderId: myOrder.id, name: myOrder.buyerName } : null
+  const viewer = myOrder
+    ? { role: 'buyer', orderId: myOrder.id, token: myOrder.trackingToken, name: myOrder.buyerName }
+    : null
   const pledgeDefaults = user ? { name: user.fullName ?? '', email: user.primaryEmailAddress?.emailAddress ?? '' } : undefined
 
   if (loading) {
@@ -147,16 +148,28 @@ export function PublicBatch() {
   const pledgeable = canPledge(batch, batch.stats)
 
   return (
-    <>
+    <StudioTheme hue={batch.creator?.accentHue}>
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
         <div className="grid gap-8 lg:grid-cols-[1fr_380px] lg:gap-10">
           <div className="min-w-0 space-y-10">
             <div>
               <BatchCover hue={batch.coverHue} unitLabel={batch.unitLabel} size="lg" className="aspect-[4/3] rounded-3xl sm:aspect-[2/1] lg:aspect-[16/10]" />
               <div className="mt-6">
-                <p className="flex items-center gap-1.5 text-sm text-muted-fg">
-                  <MapPin className="size-4" /> {batch.studio}
-                </p>
+                {batch.creator ? (
+                  <Link
+                    to={`/s/${batch.creator.slug}`}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-fg transition-colors hover:text-primary"
+                  >
+                    <span aria-hidden>{batch.creator.emoji}</span> {batch.creator.studioName}
+                    <span className="flex items-center gap-1 font-normal">
+                      · <MapPin className="size-3.5" /> {batch.creator.city}
+                    </span>
+                  </Link>
+                ) : (
+                  <p className="flex items-center gap-1.5 text-sm text-muted-fg">
+                    <MapPin className="size-4" /> {batch.studio}
+                  </p>
+                )}
                 <h1 className="mt-2 font-display text-3xl leading-tight font-semibold tracking-tight text-balance sm:text-4xl">
                   {batch.title}
                 </h1>
@@ -242,6 +255,6 @@ export function PublicBatch() {
         onClose={() => setPledgeOpen(false)}
         defaults={pledgeDefaults}
       />
-    </>
+    </StudioTheme>
   )
 }

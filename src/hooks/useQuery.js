@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { subscribe } from '../api/mockDb'
+import { subscribe } from '../api/client'
 
 /**
- * Minimal data-fetching hook. Re-runs when `key` changes and whenever the
- * mock DB changes (including from another tab), without flashing loading
- * states on background refreshes.
+ * Minimal data-fetching hook. Re-runs when `key` changes and after any write
+ * (including from another tab), without flashing loading states on background refreshes.
  */
 export function useQuery(key, fetcher) {
   const [result, setResult] = useState({ key: null, data: undefined, error: null })

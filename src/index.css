@@ -51,6 +51,22 @@
   color-scheme: dark;
 }
 
+/* Per-studio branding: set --studio-hue on a wrapper (see StudioTheme). */
+.studio-theme {
+  --primary: hsl(var(--studio-hue) 62% 42%);
+  --primary-hover: hsl(var(--studio-hue) 62% 35%);
+  --accent: hsl(var(--studio-hue) 70% 95%);
+  --ring: hsl(var(--studio-hue) 62% 55%);
+}
+
+.dark .studio-theme {
+  --primary: hsl(var(--studio-hue) 70% 64%);
+  --primary-hover: hsl(var(--studio-hue) 75% 70%);
+  --primary-fg: hsl(var(--studio-hue) 60% 8%);
+  --accent: hsl(var(--studio-hue) 35% 14%);
+  --ring: hsl(var(--studio-hue) 70% 64%);
+}
+
 @layer base {
   *,
   ::before,

@@ -2,6 +2,7 @@ import { ChevronDown, Mail, Users } from 'lucide-react'
 import { listOutbox } from '../../api/batches'
 import { Badge, Card, EmptyState, ErrorState, Skeleton } from '../../components/ui/primitives'
 import { useQuery } from '../../hooks/useQuery'
+import { useCreator } from '../../lib/creatorContext'
 import { formatDateTime, pluralize, timeAgo } from '../../lib/utils'
 
 const KIND = {
@@ -13,7 +14,8 @@ const KIND = {
 }
 
 export function Outbox() {
-  const { data: mails, loading, error } = useQuery('outbox', listOutbox)
+  const { creator } = useCreator()
+  const { data: mails, loading, error } = useQuery(`outbox:${creator.id}`, listOutbox)
 
   return (
     <div className="space-y-6">

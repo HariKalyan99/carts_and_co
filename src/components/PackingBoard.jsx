@@ -52,7 +52,6 @@ export function PackingBoard({ batch, orders }) {
   const [courier, setCourier] = useState(COURIERS[0])
   const [pack, packing] = useMutation(markPackaged)
   const [ship, shipping] = useMutation(markShipped)
-
   const active = useMemo(() => orders.filter(isActiveOrder), [orders])
   const zones = useMemo(() => groupByZone(active), [active])
   const selectedOrders = active.filter((o) => selected.has(o.id))

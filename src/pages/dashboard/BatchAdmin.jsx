@@ -18,6 +18,7 @@ import { UpdatesFeed } from '../../components/UpdatesFeed'
 import { batchPhase, batchSteps } from '../../domain/batchLogic'
 import { nextStage } from '../../domain/stages'
 import { useMutation, useQuery } from '../../hooks/useQuery'
+import { useCreator } from '../../lib/creatorContext'
 import { absoluteUrl, formatDate, formatINR, pluralize } from '../../lib/utils'
 
 function PrimaryAction({ batch, phase, onAdvance, onCancel, onComplete, onGoPacking, cancelling, completing }) {
@@ -70,7 +71,8 @@ export function BatchAdmin() {
   const tab = params.get('tab') ?? 'overview'
   const setTab = (id) => setParams(id === 'overview' ? {} : { tab: id }, { replace: true })
 
-  const { data, loading, error } = useQuery(`admin:${batchId}`, () => getBatchAdmin(batchId))
+  const { creator } = useCreator()
+  const { data, loading, error } = useQuery(`admin:${batchId}:${creator.id}`, () => getBatchAdmin(batchId))
   const [advanceOpen, setAdvanceOpen] = useState(false)
   const [cancel, cancelling] = useMutation(cancelBatch)
   const [complete, completing] = useMutation(advanceStage)
@@ -117,7 +119,7 @@ export function BatchAdmin() {
 
   const onComplete = async () => {
     try {
-      await complete(batch.id)
+      await complete(batch)
       toast.success('Batch complete 🎉', { description: 'Every buyer got a thank-you email.' })
     } catch (err) {
       toast.error(err.message)
@@ -208,7 +210,7 @@ export function BatchAdmin() {
                 <p className="mt-0.5 mb-5 text-sm text-muted-fg">
                   Replies show an Artist badge and email the backer you’re replying to.
                 </p>
-                <UpdatesFeed batch={batch} viewer={{ role: 'creator', name: batch.artist }} />
+                <UpdatesFeed batch={batch} viewer={{ role: 'creator', creatorId: creator.id, name: creator.displayName }} />
               </Card>
             </div>
 

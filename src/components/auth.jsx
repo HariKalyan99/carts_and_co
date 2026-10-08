@@ -1,7 +1,10 @@
-import { Navigate, useLocation } from 'react-router'
+import { Navigate, Outlet, useLocation } from 'react-router'
 import { SignIn, SignOutButton, SignUp, useAuth, useUser } from '@clerk/react-router'
 import { Loader2, ShieldAlert } from 'lucide-react'
+import { getMyCreator } from '../api/creators'
+import { useQuery } from '../hooks/useQuery'
 import { clerkAppearance, isCreator } from '../lib/auth'
+import { CreatorContext } from '../lib/creatorContext'
 import { Button, ButtonLink } from './ui/Button'
 import { EmptyState } from './ui/primitives'
 
@@ -30,10 +33,18 @@ export function RequireAuth({ children }) {
   return children
 }
 
-/** Signed in *and* allowed into the studio dashboard. */
-export function RequireCreator({ children }) {
+/**
+ * Layout route for the studio dashboard: signed in, allowed to be a creator, and
+ * with a studio profile (otherwise sent to onboarding). Provides CreatorContext.
+ */
+export function RequireCreator() {
   const { isLoaded, isSignedIn, user } = useUser()
   const signIn = useSignInRedirect()
+  const { pathname } = useLocation()
+  const allowed = isSignedIn && isCreator(user)
+  const profile = useQuery(`creator:${allowed ? user.id : 'none'}`, () =>
+    allowed ? getMyCreator() : Promise.resolve(null),
+  )
 
   if (!isLoaded) return <FullPageLoader label="Checking your studio access…" />
   if (!isSignedIn) return <Navigate to={signIn} replace />
@@ -58,7 +69,17 @@ export function RequireCreator({ children }) {
       </div>
     )
   }
-  return children
+
+  if (profile.loading) return <FullPageLoader label="Opening your studio…" />
+  const onboarding = pathname.startsWith('/dashboard/onboarding')
+  if (!profile.data && !onboarding) return <Navigate to="/dashboard/onboarding" replace />
+  if (profile.data && onboarding) return <Navigate to="/dashboard" replace />
+
+  return (
+    <CreatorContext.Provider value={{ creator: profile.data, user }}>
+      <Outlet />
+    </CreatorContext.Provider>
+  )
 }
 
 function AuthShell({ title, subtitle, children }) {

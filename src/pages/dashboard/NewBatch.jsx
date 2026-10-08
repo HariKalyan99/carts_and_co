@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { useUser } from '@clerk/react-router'
 import { ArrowLeft, Check, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { createBatch } from '../../api/batches'
@@ -10,6 +9,7 @@ import { Field, Input, Textarea } from '../../components/ui/Field'
 import { Card } from '../../components/ui/primitives'
 import { COVER_HUES } from '../../domain/stages'
 import { useMutation } from '../../hooks/useQuery'
+import { useCreator } from '../../lib/creatorContext'
 import { cn, daysUntil } from '../../lib/utils'
 
 const inDays = (n) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10)
@@ -39,7 +39,7 @@ function validate(v) {
 
 export function NewBatch() {
   const navigate = useNavigate()
-  const { user } = useUser()
+  const { creator } = useCreator()
   const [values, setValues] = useState(INITIAL)
   const [errors, setErrors] = useState({})
   const [submit, pending] = useMutation(createBatch)
@@ -58,7 +58,7 @@ export function NewBatch() {
       return
     }
     try {
-      const batch = await submit({ ...values, artist: user?.fullName })
+      const batch = await submit(values)
       toast.success('Batch created — pre-orders are open!')
       navigate(`/dashboard/batches/${batch.id}`)
     } catch (err) {
@@ -68,6 +68,7 @@ export function NewBatch() {
 
   const preview = {
     id: 'preview',
+    creator,
     title: values.title || 'Your batch name',
     tagline: values.tagline || 'A one-line description buyers will see.',
     unitLabel: values.unitLabel || 'pieces',

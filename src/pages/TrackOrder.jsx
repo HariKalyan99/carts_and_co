@@ -1,4 +1,4 @@
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { motion } from 'motion/react'
 import { ArrowLeft, Package, Truck } from 'lucide-react'
 import { getTracking } from '../api/batches'
@@ -7,6 +7,7 @@ import { CopyButton } from '../components/common'
 import { FundingProgress } from '../components/FundingProgress'
 import { OrderStatusBadge } from '../components/badges'
 import { StageTimeline } from '../components/StageTimeline'
+import { StudioTheme } from '../components/StudioTheme'
 import { ButtonLink } from '../components/ui/Button'
 import { Card, EmptyState, Skeleton } from '../components/ui/primitives'
 import { UpdatesFeed } from '../components/UpdatesFeed'
@@ -54,7 +55,7 @@ export function TrackOrder() {
   const refunded = order.status === 'refunded'
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6 sm:py-10">
+    <StudioTheme hue={batch.creator?.accentHue} className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6 sm:py-10">
       <div className="flex items-center justify-between gap-3">
         <ButtonLink to={`/b/${batch.id}`} variant="ghost" size="sm" className="-ml-3">
           <ArrowLeft className="size-4" /> Batch page
@@ -113,7 +114,7 @@ export function TrackOrder() {
           <Card className="p-5 sm:p-6">
             <UpdatesFeed
               batch={batch}
-              viewer={refunded ? null : { role: 'buyer', orderId: order.id, name: order.buyerName }}
+              viewer={refunded ? null : { role: 'buyer', orderId: order.id, token: order.trackingToken, name: order.buyerName }}
             />
           </Card>
         </section>
@@ -124,6 +125,11 @@ export function TrackOrder() {
             <BatchCover hue={batch.coverHue} unitLabel={batch.unitLabel} size="sm" className="h-24" />
             <div className="p-4">
               <p className="font-semibold leading-snug">{batch.title}</p>
+              {batch.creator && (
+                <Link to={`/s/${batch.creator.slug}`} className="text-sm font-medium text-primary hover:underline">
+                  {batch.creator.emoji} {batch.creator.studioName}
+                </Link>
+              )}
               <dl className="mt-2 divide-y divide-border">
                 <Detail label="Status">
                   <OrderStatusBadge status={order.status} />
@@ -139,6 +145,6 @@ export function TrackOrder() {
           </Card>
         </section>
       </div>
-    </div>
+    </StudioTheme>
   )
 }

@@ -1,16 +1,18 @@
-import { NavLink, Outlet, useNavigate } from 'react-router'
-import { SignOutButton, UserButton, useUser } from '@clerk/react-router'
-import { Boxes, LogOut, Mail, PlusCircle, RotateCcw, Store } from 'lucide-react'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router'
+import { SignOutButton, UserButton } from '@clerk/react-router'
+import { Boxes, ExternalLink, LogOut, Mail, PlusCircle, RotateCcw, Settings, Store } from 'lucide-react'
 import { toast } from 'sonner'
-import { resetDemo } from '../api/batches'
-import { Logo, ThemeToggle } from '../components/common'
+import { resetStudio } from '../api/batches'
+import { ThemeToggle } from '../components/common'
+import { StudioTheme } from '../components/StudioTheme'
+import { useCreator } from '../lib/creatorContext'
 import { cn } from '../lib/utils'
 
 const NAV = [
   { to: '/dashboard', label: 'Batches', icon: Boxes, end: true },
   { to: '/dashboard/batches/new', label: 'New batch', icon: PlusCircle },
   { to: '/dashboard/outbox', label: 'Outbox', icon: Mail },
-  { to: '/', label: 'Storefront', icon: Store, end: true },
+  { to: '/dashboard/settings', label: 'Settings', icon: Settings },
 ]
 
 function SidebarLink({ to, label, icon: Icon, end }) {
@@ -31,32 +33,63 @@ function SidebarLink({ to, label, icon: Icon, end }) {
   )
 }
 
+function StudioBadge({ creator }) {
+  return (
+    <Link to="/dashboard" className="flex min-w-0 items-center gap-2.5 rounded-lg">
+      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary text-lg text-primary-fg shadow-sm shadow-primary/30">
+        {creator.emoji}
+      </span>
+      <span className="min-w-0 leading-tight">
+        <span className="block truncate font-display text-base font-semibold tracking-tight">{creator.studioName}</span>
+        <span className="block text-[11px] font-medium text-muted-fg">Studio dashboard</span>
+      </span>
+    </Link>
+  )
+}
+
 export function DashboardLayout() {
   const navigate = useNavigate()
-  const { user } = useUser()
+  const { creator, user } = useCreator()
 
   const onReset = async () => {
-    if (!window.confirm('Reset all demo data to the original sample batches?')) return
-    await resetDemo()
-    toast.success('Demo data reset')
-    navigate('/dashboard')
+    if (!window.confirm('Delete every batch in your studio, with its orders, comments and emails? Your studio profile stays.')) return
+    try {
+      await resetStudio()
+      toast.success('Studio cleared')
+      navigate('/dashboard')
+    } catch (err) {
+      toast.error(err.message)
+    }
   }
 
   return (
-    <div className="min-h-dvh lg:pl-64">
+    <StudioTheme hue={creator.accentHue} className="min-h-dvh lg:pl-64">
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border bg-surface px-4 py-5 lg:flex">
-        <Logo to="/dashboard" subtitle="Studio dashboard" />
+        <StudioBadge creator={creator} />
         <nav className="mt-8 flex flex-col gap-1" aria-label="Dashboard">
           {NAV.map((item) => (
             <SidebarLink key={item.to} {...item} />
           ))}
         </nav>
+        <div className="mt-6 flex flex-col gap-1 border-t border-border pt-4">
+          <Link
+            to={`/s/${creator.slug}`}
+            target="_blank"
+            rel="noreferrer"
+            className="flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium text-muted-fg hover:bg-muted hover:text-fg"
+          >
+            <ExternalLink className="size-4" /> View studio page
+          </Link>
+          <Link to="/" className="flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium text-muted-fg hover:bg-muted hover:text-fg">
+            <Store className="size-4" /> Marketplace
+          </Link>
+        </div>
         <div className="mt-auto space-y-3">
           <div className="flex items-center gap-3 rounded-2xl bg-muted p-3">
             <UserButton />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold">{user.fullName || user.username || 'Studio owner'}</p>
+              <p className="truncate text-sm font-semibold">{creator.displayName}</p>
               <p className="truncate text-xs text-muted-fg">{user.primaryEmailAddress?.emailAddress}</p>
             </div>
             <ThemeToggle />
@@ -74,23 +107,22 @@ export function DashboardLayout() {
             onClick={onReset}
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-muted-fg hover:bg-muted hover:text-fg"
           >
-            <RotateCcw className="size-3.5" /> Reset demo data
+            <RotateCcw className="size-3.5" /> Clear all batches
           </button>
         </div>
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border/70 bg-bg/80 px-4 backdrop-blur-lg lg:hidden">
-        <Logo to="/dashboard" subtitle="Studio dashboard" />
-        <div className="flex items-center">
-          <button
-            type="button"
-            onClick={onReset}
+      <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-2 border-b border-border/70 bg-bg/80 px-4 backdrop-blur-lg lg:hidden">
+        <StudioBadge creator={creator} />
+        <div className="flex shrink-0 items-center">
+          <Link
+            to={`/s/${creator.slug}`}
             className="grid size-10 place-items-center rounded-xl text-muted-fg hover:bg-muted"
-            aria-label="Reset demo data"
+            aria-label="View studio page"
           >
-            <RotateCcw className="size-4.5" />
-          </button>
+            <ExternalLink className="size-4.5" />
+          </Link>
           <ThemeToggle />
           <div className="ml-1 flex">
             <UserButton />
@@ -124,6 +156,6 @@ export function DashboardLayout() {
           </NavLink>
         ))}
       </nav>
-    </div>
+    </StudioTheme>
   )
 }

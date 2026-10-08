@@ -125,7 +125,7 @@ function Comment({ comment, viewer, onReply, onDelete }) {
 
 /**
  * Public conversation under one studio update. `viewer` decides who may post:
- * `{ role: 'buyer', orderId, name }`, `{ role: 'creator', name }`, or null (read-only).
+ * `{ role: 'buyer', orderId, token, name }`, `{ role: 'creator', name }`, or null (read-only).
  */
 export function CommentThread({ batchId, updateKey, comments, viewer, joinHref }) {
   const [expanded, setExpanded] = useState(false)
